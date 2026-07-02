@@ -118,7 +118,7 @@ export default function RegistrarPage() {
           </div>
           {/* <div className="flex justify-end border-t border-slate-100 px-4 py-3">
             <Link href="/admin/registros" className="text-xs font-semibold text-sky-700 no-underline hover:text-sky-800">
-              Ver todos los registros s
+              Ver todos los registros ss
             </Link>
           </div> */}
         </div>
