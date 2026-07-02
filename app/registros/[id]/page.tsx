@@ -101,7 +101,7 @@ export default function RegistroDetailPage() {
                   <Field label="Cond. reproducción" value={r.cond_reproduccion} />
                   {r.folios && <Field label="Folios" value={r.folios} />}
                   {r.hojas && <Field label="Hojas" value={r.hojas} />}
-                  {r.medidas && <Field label="Medidas" value={r.medidas} />}
+                  {r.medidas && <Field label="Carillas" value={r.medidas} />}
                 </div>
               </div>
             </div>

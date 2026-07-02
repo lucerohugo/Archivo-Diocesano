@@ -188,7 +188,7 @@ export default function EditarRegistroPage() {
                     <F label="Número"><input className="form-input" type="text" value={form.numero} onChange={(e) => s('numero', e.target.value)} /></F>
                     <F label="Folios"><input className="form-input" type="text" value={form.folios} onChange={(e) => s('folios', e.target.value)} /></F>
                     <F label="Hojas"><input className="form-input" type="text" value={form.hojas} onChange={(e) => s('hojas', e.target.value)} /></F>
-                    <F label="Medidas"><input className="form-input" type="text" value={form.medidas} onChange={(e) => s('medidas', e.target.value)} /></F>
+                    <F label="Carillas"><input className="form-input" type="text" value={form.medidas} onChange={(e) => s('medidas', e.target.value)} /></F>
                   </div>
                 </div>
               </div>
