@@ -49,11 +49,11 @@ export default function RegistroDetailPage() {
             </span>
             <span className="text-xs text-slate-400">Registro N° {r.codigo}</span>
           </div>
-          <h1 className="max-w-3xl text-2xl font-semibold leading-snug text-slate-900">
+          <h1 className="max-w-10xl text-2xl font-semibold leading-snug text-slate-900">
             {r.titulo_referencia}
           </h1>
           {r.descripcion_breve && (
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-500">
+            <p className="mt-3 max-w-10xl text-sm leading-relaxed text-slate-500">
               {r.descripcion_breve}
             </p>
           )}
@@ -172,7 +172,7 @@ export default function RegistroDetailPage() {
             )}
 
             <Link href="/registros" className="btn-back flex w-full justify-center">
-              ← Volver al archivo
+              Volver al archivo
             </Link>
           </div>
         </div>

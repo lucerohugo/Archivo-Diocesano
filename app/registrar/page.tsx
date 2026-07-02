@@ -65,7 +65,7 @@ export default function RegistrarPage() {
               </div>
               <div>
                 <p className="text-base font-semibold text-slate-900">Todos los registros</p>
-                <p className="mt-0.5 text-xs text-slate-500">Gestionar registros públicos y privados</p>
+                <p className="mt-0.5 text-xs text-slate-500">Gestionar registros editar o borrar</p>
               </div>
             </div>
           </Link>
@@ -116,11 +116,11 @@ export default function RegistrarPage() {
               </tbody>
             </table>
           </div>
-          <div className="flex justify-end border-t border-slate-100 px-4 py-3">
+          {/* <div className="flex justify-end border-t border-slate-100 px-4 py-3">
             <Link href="/admin/registros" className="text-xs font-semibold text-sky-700 no-underline hover:text-sky-800">
-              Ver todos los registros →
+              Ver todos los registros 
             </Link>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

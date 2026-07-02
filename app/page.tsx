@@ -23,13 +23,13 @@ export default function HomePage() {
       </header>
 
       {/* Hero */}
-      <main className="flex flex-1 flex-col items-center justify-center px-6 py-20 text-center">
+      <main className="flex flex-1 flex-col items-center justify-center px-6 pt-5 py-20 text-center">
         {/* Escudo episcopal */}
         <Image
           src="/escudo-episcopal-212x300.png"
           alt="Escudo Episcopal Diocesano"
-          width={90}
-          height={127}
+          width={160}
+          height={130}
           className="mb-8 object-contain drop-shadow-sm"
           priority
         />
@@ -38,7 +38,7 @@ export default function HomePage() {
         <div className="mb-4 flex items-center gap-2">
           <div className="h-px w-8 bg-sky-300" />
           <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">
-            Diócesis de Río Cuarto
+            Diocesano - Río Cuarto
           </span>
           <div className="h-px w-8 bg-sky-300" />
         </div>
@@ -49,8 +49,7 @@ export default function HomePage() {
         </h1>
 
         <p className="mb-10 max-w-md text-base font-light leading-relaxed text-slate-500">
-          Custodia y preservación del patrimonio documental de la Iglesia Diocesana.
-          Siglos de historia al alcance de su consulta.
+          Obispado Villa de la Concepción del Río Cuarto. Argentina
         </p>
 
         {/* CTAs */}
@@ -60,28 +59,28 @@ export default function HomePage() {
             className="inline-flex items-center gap-2 rounded-lg bg-sky-800 px-6 py-3 text-[12px] font-semibold uppercase tracking-wider text-white no-underline shadow-sm transition-colors hover:bg-sky-700"
           >
             <Search size={14} />
-            Explorar el archivo
+            Consulta de Documentos
           </Link>
-          <Link
+          {/* <Link
             href="/login"
             className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-6 py-3 text-[12px] font-semibold uppercase tracking-wider text-slate-700 no-underline transition-colors hover:border-sky-200 hover:text-sky-800"
           >
             <Shield size={14} />
             Área restringida
-          </Link>
+          </Link> */}
         </div>
 
         {/* Divider */}
-        <div className="mt-20 flex w-full max-w-2xl items-center gap-6">
+        <div className="mt-10 flex w-full max-w-2xl items-center gap-6">
           <div className="h-px flex-1 bg-slate-100" />
           <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-400">
-            Patrimonio documental
+            Documentacion Conservada
           </span>
           <div className="h-px flex-1 bg-slate-100" />
         </div>
 
         {/* Feature cards */}
-        <div className="mt-8 grid w-full max-w-2xl grid-cols-3 gap-4">
+        <div className="mt-8 grid w-full max-w-6xl grid-cols-3 gap-8">
           {[
             {
               icon: Archive,
@@ -114,11 +113,25 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-100 px-10 py-5 text-center">
+      <footer className="border-t border-slate-100 px-10 pt-1 pb-5 text-center">
         <p className="text-[11px] tracking-wide text-slate-400">
-          Archivo Histórico Diocesano — Diócesis de Río Cuarto
+          Archivo Histórico Diocesano
         </p>
+        
       </footer>
+      <footer className="border-t border-slate-100 px-10 py-5">
+        <div className="flex justify-end items-center gap-1">
+          <Image
+            src="/isologo.png"
+            alt="Logo Brix"
+            width={18}
+            height={20}
+          />
+          <small className="text-[9px] text-slate-500 font-medium">
+            BrixSoftware — HL
+          </small>
+  </div>
+</footer>
     </div>
   );
 }

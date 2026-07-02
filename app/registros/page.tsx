@@ -33,17 +33,20 @@ export default function RegistrosPage() {
       <div className="content-wrapper pb-16 pt-10">
         {/* Page header */}
         <div className="page-header">
+          <Link href="/" className="btn-back mb-4 inline-flex ">
+            Inicio
+          </Link>
           <div className="flex items-end justify-between">
             <div>
               <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-sky-700">
-                Patrimonio documental
+                documentacion conservada
               </p>
               <h1 className="page-title">Registros Históricos</h1>
               <p className="page-subtitle">
-                {registros.length} documentos disponibles en el archivo público
+                {registros.length} documentos disponibles
               </p>
             </div>
-            <Link href="/" className="btn-back">← Inicio</Link>
+            {/* <Link href="/" className="btn-back">Inicio</Link> */}
           </div>
         </div>
 
@@ -146,7 +149,7 @@ export default function RegistrosPage() {
 
         {filtered.length > 0 && (
           <p className="mt-6 text-center text-[11px] text-slate-400">
-            Mostrando {filtered.length} de {registros.length} registros públicos
+            Mostrando {filtered.length} de {registros.length} registros
           </p>
         )}
       </div>

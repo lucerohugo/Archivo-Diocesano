@@ -19,7 +19,7 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     await new Promise((r) => setTimeout(r, 700));
-    if (usuario === 'admin' && password === 'admin') {
+    if (usuario === 'brix' && password === 'Brix123*') {
       router.push('/registrar');
     } else {
       setError('Usuario o contraseña incorrectos.');
@@ -31,7 +31,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4">
       {/* Back */}
       <div className="absolute left-6 top-6">
-        <Link href="/" className="btn-back">← Inicio</Link>
+        <Link href="/" className="btn-back">Inicio</Link>
       </div>
 
       {/* Card */}
@@ -109,7 +109,7 @@ export default function LoginPage() {
 
         <div className="px-8 py-5 text-center">
           <Link href="/registros" className="text-xs text-sky-700 no-underline hover:text-sky-800">
-            Ver registros públicos sin iniciar sesión
+            Ver registros sin iniciar sesión
           </Link>
         </div>
       </div>

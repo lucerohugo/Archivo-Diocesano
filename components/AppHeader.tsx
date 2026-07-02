@@ -17,7 +17,7 @@ interface AppHeaderProps {
 export default function AppHeader({ showAdminNav, breadcrumb }: AppHeaderProps) {
   return (
     <header className="app-header">
-      <div className="app-header-inner">
+      <div className="border-b border-slate-100 px-10 py-5 flex items-center justify-between">
         {/* Logo */}
         <div className="logo-area">
           <Link href="/" className="logo-area no-underline">
@@ -56,7 +56,7 @@ export default function AppHeader({ showAdminNav, breadcrumb }: AppHeaderProps) 
         {showAdminNav && (
           <div className="flex items-center gap-2">
             <nav className="flex items-center gap-1">
-              <Link
+              {/* <Link
                 href="/registrar"
                 className="rounded-md px-3 py-1.5 text-xs font-medium text-slate-600 no-underline transition-colors hover:bg-slate-100 hover:text-slate-900"
               >
@@ -67,7 +67,7 @@ export default function AppHeader({ showAdminNav, breadcrumb }: AppHeaderProps) 
                 className="rounded-md px-3 py-1.5 text-xs font-medium text-slate-600 no-underline transition-colors hover:bg-slate-100 hover:text-slate-900"
               >
                 Todos los registros
-              </Link>
+              </Link> */}
               <Link
                 href="/registrar/crear"
                 className="rounded-md bg-sky-800 px-4 py-1.5 text-xs font-semibold text-white no-underline transition-colors hover:bg-sky-700"
@@ -77,7 +77,7 @@ export default function AppHeader({ showAdminNav, breadcrumb }: AppHeaderProps) 
             </nav>
             <div className="h-5 w-px bg-slate-200" />
             <Link
-              href="/login"
+              href="/"
               className="flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 no-underline transition-colors hover:bg-slate-50"
             >
               <LogOut size={12} />

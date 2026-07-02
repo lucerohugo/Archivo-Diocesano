@@ -140,7 +140,7 @@ export default function EditarRegistroPage() {
                 <F label="Destinatarios"><input className="form-input" type="text" value={form.destinatarios} onChange={(e) => s('destinatarios', e.target.value)} /></F>
               </div>
             </Card>
-            <Card title="Visibilidad">
+            {/* <Card title="Visibilidad">
               <div className="flex gap-3">
                 {[{ v: 'publico', label: 'Público', desc: 'Visible para todos' }, { v: 'privado', label: 'Privado', desc: 'Solo administradores' }].map((opt) => (
                   <label key={opt.v} className={`flex flex-1 cursor-pointer items-center gap-3 rounded-lg border p-4 transition-all ${form.visibilidad === opt.v ? 'border-sky-300 bg-sky-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
@@ -152,7 +152,7 @@ export default function EditarRegistroPage() {
                   </label>
                 ))}
               </div>
-            </Card>
+            </Card> */}
           </div>
         )}
 
@@ -244,15 +244,31 @@ export default function EditarRegistroPage() {
                 </div>
               )}
             </div>
+            <Card title="Visibilidad">
+              <div className="flex gap-3">
+                {[{ v: 'publico', label: 'Público', desc: 'Visible para todos' }, { v: 'privado', label: 'Privado', desc: 'Solo administradores' }].map((opt) => (
+                  <label key={opt.v} className={`flex flex-1 cursor-pointer items-center gap-3 rounded-lg border p-4 transition-all ${form.visibilidad === opt.v ? 'border-sky-300 bg-sky-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                    <input type="radio" name="visibilidad" value={opt.v} checked={form.visibilidad === opt.v} onChange={(e) => s('visibilidad', e.target.value)} className="accent-sky-700" />
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{opt.label}</p>
+                      <p className="text-xs text-slate-500">{opt.desc}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </Card> 
           </div>
         )}
 
+          
+        
+
         <div className="mt-8 flex items-center justify-between border-t border-slate-200 pt-6">
-          <Link href="/admin/registros" className="btn-back">← Cancelar</Link>
+          <Link href="/admin/registros" className="btn-back">Cancelar</Link>
           <div className="flex items-center gap-2.5">
-            {tab !== 'datos' && <button className="btn-secondary" onClick={() => setTab(tab === 'archivos' ? 'almacenamiento' : 'datos')}>← Anterior</button>}
+            {tab !== 'datos' && <button className="btn-secondary" onClick={() => setTab(tab === 'archivos' ? 'almacenamiento' : 'datos')}> Anterior</button>}
             {tab !== 'archivos' ? (
-              <button className="btn-primary" onClick={() => setTab(tab === 'datos' ? 'almacenamiento' : 'archivos')}>Siguiente →</button>
+              <button className="btn-primary" onClick={() => setTab(tab === 'datos' ? 'almacenamiento' : 'archivos')}>Siguiente</button>
             ) : (
               <button className="btn-primary" onClick={submit} disabled={saving}>
                 {saving ? 'Guardando...' : <><CheckCircle size={13} /> Guardar cambios</>}
