@@ -98,7 +98,7 @@ export default function CrearRegistroPage() {
                 <F label="Fecha de recepción">
                   <input className="form-input" type="date" value={form.fecha_recepcion} onChange={(e) => s('fecha_recepcion', e.target.value)} />
                 </F>
-                <F label="Título referencia *">
+                <F label="Título referencia">
                   <input className="form-input" type="text" value={form.titulo_referencia} onChange={(e) => s('titulo_referencia', e.target.value)} placeholder="Título del documento histórico" />
                 </F>
                 <F label="Descripción breve" wide>

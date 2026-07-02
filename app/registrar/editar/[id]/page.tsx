@@ -114,7 +114,7 @@ export default function EditarRegistroPage() {
             <Card title="Datos principales de registro">
               <div className="form-grid-2">
                 <F label="Fecha de recepción"><input className="form-input" type="date" value={form.fecha_recepcion} onChange={(e) => s('fecha_recepcion', e.target.value)} /></F>
-                <F label="Título referencia *"><input className="form-input" type="text" value={form.titulo_referencia} onChange={(e) => s('titulo_referencia', e.target.value)} /></F>
+                <F label="Título referencia"><input className="form-input" type="text" value={form.titulo_referencia} onChange={(e) => s('titulo_referencia', e.target.value)} /></F>
                 <F label="Descripción breve" wide><textarea className="form-textarea" value={form.descripcion_breve} onChange={(e) => s('descripcion_breve', e.target.value)} rows={3} /></F>
               </div>
             </Card>
