@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { login } from '@/lib/api';
+import { setSession } from '@/lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,14 +19,24 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 700));
-    if (usuario === 'brix' && password === 'Brix123*') {
-      router.push('/registrar');
-    } else {
-      setError('Usuario o contraseña incorrectos.');
+
+    if (!usuario || !password) {
+      setError('Usuario y contraseña son requeridos.');
+      return;
     }
-    setLoading(false);
+
+    setLoading(true);
+
+    const { data, error: loginError } = await login(usuario, password);
+
+    if (loginError || !data) {
+      setError(loginError || 'Usuario o contraseña inválidos.');
+      setLoading(false);
+      return;
+    }
+
+    setSession(data.usuario, data.access, data.refresh);
+    router.push('/registrar');
   };
 
   return (

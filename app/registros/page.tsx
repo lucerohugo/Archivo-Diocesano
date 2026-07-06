@@ -1,29 +1,61 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, BookOpen, ChevronRight } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
-import { getPublicRegistros } from '@/lib/mock-data';
+import { getRegistrosPublicos } from '@/lib/api';
 
-const registros = getPublicRegistros();
-const allYears = Array.from(new Set(registros.map((r) => r.anio))).sort((a, b) => b - a);
-const allCategorias = Array.from(new Set(registros.map((r) => r.categoria))).filter(Boolean);
+interface RegistroPublico {
+  arc_codi: number;
+  arc_titu: string;
+  arc_desc?: string;
+  arc_año?: number;
+  arc_orig?: string;
+  arc_cate?: string;
+  arc_fech: string;
+}
 
 export default function RegistrosPage() {
+  const [registros, setRegistros] = useState<RegistroPublico[]>([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [anioFilter, setAnioFilter] = useState('');
   const [catFilter, setCatFilter] = useState('');
 
+  // Cargar registros públicos del backend
+  useEffect(() => {
+    const loadRegistros = async () => {
+      setLoading(true);
+      const result = await getRegistrosPublicos();
+      if (result.data) {
+        const data = result.data;
+        // Manejar si la API retorna un array o un objeto con resultados
+        const registrosArray = Array.isArray(data) ? data : (data.results || []);
+        setRegistros(registrosArray as RegistroPublico[]);
+      }
+      setLoading(false);
+    };
+    loadRegistros();
+  }, []);
+
+  const allYears = useMemo(() => {
+    return Array.from(new Set(registros.map((r) => r.arc_año).filter(Boolean))).sort((a, b) => (b || 0) - (a || 0));
+  }, [registros]);
+
+  const allCategorias = useMemo(() => {
+    return Array.from(new Set(registros.map((r) => r.arc_cate).filter(Boolean)));
+  }, [registros]);
+
   const filtered = useMemo(() => {
     return registros.filter((r) => {
       const q = query.toLowerCase();
-      const matchQ = !q || r.titulo_referencia.toLowerCase().includes(q) || r.codigo.includes(q) || r.origen.toLowerCase().includes(q) || r.descripcion_breve.toLowerCase().includes(q) || String(r.anio).includes(q);
-      const matchA = !anioFilter || String(r.anio) === anioFilter;
-      const matchC = !catFilter || r.categoria === catFilter;
+      const matchQ = !q || r.arc_titu.toLowerCase().includes(q) || String(r.arc_codi).includes(q) || r.arc_orig?.toLowerCase().includes(q) || r.arc_desc?.toLowerCase().includes(q) || String(r.arc_año).includes(q);
+      const matchA = !anioFilter || String(r.arc_año) === anioFilter;
+      const matchC = !catFilter || r.arc_cate === catFilter;
       return matchQ && matchA && matchC;
     });
-  }, [query, anioFilter, catFilter]);
+  }, [registros, query, anioFilter, catFilter]);
 
   const hasFilters = query || anioFilter || catFilter;
 
@@ -92,7 +124,12 @@ export default function RegistrosPage() {
         </div>
 
         {/* Results */}
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <BookOpen size={36} className="mb-4 text-slate-300" />
+            <p className="text-lg font-medium text-slate-400">Cargando registros...</p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <BookOpen size={36} className="mb-4 text-slate-300" />
             <p className="text-lg font-medium text-slate-400">Sin resultados</p>
@@ -103,40 +140,34 @@ export default function RegistrosPage() {
         ) : (
           <div className="flex flex-col gap-3">
             {filtered.map((r) => (
-              <Link key={r.id} href={`/registros/${r.id}`} className="no-underline">
+              <Link key={r.arc_codi} href={`/registros/${r.arc_codi}`} className="no-underline">
                 <div className="group flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-sky-200 hover:shadow-md">
                   {/* Code badge */}
                   <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg border border-sky-100 bg-sky-50">
                     <span className="text-[8px] font-bold uppercase text-sky-500">N°</span>
-                    <span className="text-lg font-bold leading-none text-sky-800">{r.codigo}</span>
+                    <span className="text-lg font-bold leading-none text-sky-800">{r.arc_codi}</span>
                   </div>
 
                   <div className="min-w-0 flex-1">
                     <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                      <span className="rounded border border-sky-100 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700">
-                        {r.categoria}
-                      </span>
+                      {r.arc_cate && (
+                        <span className="rounded border border-sky-100 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700">
+                          {r.arc_cate}
+                        </span>
+                      )}
                       <span className="text-xs text-slate-400">
-                        {r.anio} · {r.origen}
+                        {r.arc_año || '—'} · {r.arc_orig || '—'}
                       </span>
                     </div>
 
                     <h2 className="mb-1.5 line-clamp-2 text-sm font-semibold leading-snug text-slate-900">
-                      {r.titulo_referencia}
+                      {r.arc_titu}
                     </h2>
 
-                    {r.descripcion_breve && (
+                    {r.arc_desc && (
                       <p className="line-clamp-2 text-xs leading-relaxed text-slate-500">
-                        {r.descripcion_breve}
+                        {r.arc_desc}
                       </p>
-                    )}
-
-                    {r.archivos.length > 0 && (
-                      <div className="mt-2 flex gap-1">
-                        {r.archivos.map((a) => (
-                          <span key={a.id} className="badge-file">{a.tipo}</span>
-                        ))}
-                      </div>
                     )}
                   </div>
 

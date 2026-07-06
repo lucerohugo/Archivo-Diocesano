@@ -1,28 +1,53 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, Calendar, Trash2, Pencil, PlusCircle, ChevronUp, ChevronDown } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
-import { getAllRegistros } from '@/lib/mock-data';
-import { Registro } from '@/lib/types';
+import { getRegistros, deleteRegistro } from '@/lib/api';
 
-const initialRegistros = getAllRegistros();
+interface Registro {
+  arc_codi: number;
+  arc_titu: string;
+  arc_fech: string;
+  arc_año?: number;
+  arc_visw?: boolean;
+  archivos?: Array<{ id: number; nombre: string; tipo: string; archivo: string }>;
+}
 
-type SortKey = 'id' | 'fecha_recepcion' | 'anio';
+type SortKey = 'arc_codi' | 'arc_fech' | 'arc_año';
 type SortDir = 'asc' | 'desc';
 
 export default function AdminRegistrosPage() {
-  const [registros, setRegistros] = useState<Registro[]>(initialRegistros);
+  const [registros, setRegistros] = useState<Registro[]>([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [anioFilter, setAnioFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  const [sortKey, setSortKey] = useState<SortKey>('id');
+  const [sortKey, setSortKey] = useState<SortKey>('arc_codi');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
 
-  const allYears = Array.from(new Set(initialRegistros.map((r) => r.anio))).sort((a, b) => b - a);
+  // Cargar registros del backend
+  useEffect(() => {
+    const loadRegistros = async () => {
+      setLoading(true);
+      const result = await getRegistros();
+      if (result.data) {
+        const data = result.data;
+        // Manejar si la API retorna un array o un objeto con resultados
+        const registrosArray = Array.isArray(data) ? data : (data.results ?? []);
+        setRegistros(registrosArray as Registro[]);
+      }
+      setLoading(false);
+    };
+    loadRegistros();
+  }, []);
+
+  const allYears = useMemo(() => {
+    return Array.from(new Set(registros.map((r) => r.arc_año).filter(Boolean))).sort((a, b) => (b || 0) - (a || 0));
+  }, [registros]);
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -32,22 +57,25 @@ export default function AdminRegistrosPage() {
   const filtered = useMemo(() => {
     let list = registros.filter((r) => {
       const q = query.toLowerCase();
-      const matchQuery = !q || r.titulo_referencia.toLowerCase().includes(q) || r.codigo.includes(q) || String(r.anio).includes(q);
-      const matchAnio = !anioFilter || String(r.anio) === anioFilter;
-      const matchFrom = !dateFrom || r.fecha_recepcion >= dateFrom;
-      const matchTo = !dateTo || r.fecha_recepcion <= dateTo;
+      const matchQuery = !q || r.arc_titu.toLowerCase().includes(q) || String(r.arc_codi).includes(q) || String(r.arc_año).includes(q);
+      const matchAnio = !anioFilter || String(r.arc_año) === anioFilter;
+      const matchFrom = !dateFrom || r.arc_fech >= dateFrom;
+      const matchTo = !dateTo || r.arc_fech <= dateTo;
       return matchQuery && matchAnio && matchFrom && matchTo;
     });
     list = [...list].sort((a, b) => {
-      const av = sortKey === 'id' ? a.id : sortKey === 'anio' ? a.anio : a.fecha_recepcion;
-      const bv = sortKey === 'id' ? b.id : sortKey === 'anio' ? b.anio : b.fecha_recepcion;
+      const av = sortKey === 'arc_codi' ? a.arc_codi : sortKey === 'arc_año' ? (a.arc_año ?? 0) : a.arc_fech;
+      const bv = sortKey === 'arc_codi' ? b.arc_codi : sortKey === 'arc_año' ? (b.arc_año ?? 0) : b.arc_fech;
       return sortDir === 'asc' ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
     });
     return list;
   }, [registros, query, anioFilter, dateFrom, dateTo, sortKey, sortDir]);
 
-  const handleDelete = (id: number) => {
-    setRegistros((r) => r.filter((reg) => reg.id !== id));
+  const handleDelete = async (id: number) => {
+    const result = await deleteRegistro(id);
+    if (!result.error) {
+      setRegistros((r) => r.filter((reg) => reg.arc_codi !== id));
+    }
     setDeleteConfirm(null);
   };
 
@@ -132,111 +160,139 @@ export default function AdminRegistrosPage() {
 
         {/* Table */}
         <div className="card-section">
-          <div className="overflow-x-auto">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>
-                    <button
-                      onClick={() => toggleSort('id')}
-                      className="flex items-center gap-1 bg-transparent border-none text-[10px] font-bold uppercase tracking-[0.1em] text-white cursor-pointer"
-                    >
-                      Código <SortIcon col="id" />
-                    </button>
-                  </th>
-                  <th>
-                    <button
-                      onClick={() => toggleSort('fecha_recepcion')}
-                      className="flex items-center gap-1 bg-transparent border-none text-[10px] font-bold uppercase tracking-[0.1em] text-white cursor-pointer"
-                    >
-                      Fecha <SortIcon col="fecha_recepcion" />
-                    </button>
-                  </th>
-                  <th>Título referencia</th>
-                  <th>
-                    <button
-                      onClick={() => toggleSort('anio')}
-                      className="flex items-center gap-1 bg-transparent border-none text-[10px] font-bold uppercase tracking-[0.1em] text-white cursor-pointer"
-                    >
-                      Año <SortIcon col="anio" />
-                    </button>
-                  </th>
-                  <th>Visibilidad</th>
-                  <th>Archivos</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="py-10 text-center text-sm text-slate-400">
-                      No se encontraron registros.
-                    </td>
-                  </tr>
-                ) : (
-                  filtered.map((r) => (
-                    <tr key={r.id}>
-                      <td>
-                        <span className="text-[13px] font-bold text-sky-700">{r.codigo}</span>
-                      </td>
-                      <td className="whitespace-nowrap text-xs text-slate-500">
-                        {r.fecha_recepcion}
-                      </td>
-                      <td className="max-w-[380px]">
-                        <span className="block overflow-hidden text-ellipsis whitespace-nowrap text-[13px] text-slate-800">
-                          {r.titulo_referencia}
-                        </span>
-                      </td>
-                      <td className="font-semibold text-slate-800">{r.anio}</td>
-                      <td>
-                        <span className={r.visibilidad === 'publico' ? 'badge-public' : 'badge-private'}>
-                          {r.visibilidad === 'publico' ? 'Público' : 'Privado'}
-                        </span>
-                      </td>
-                      <td>
-                        {r.archivos.length > 0
-                          ? r.archivos.map((a) => <span key={a.id} className="badge-file">{a.tipo}</span>)
-                          : <span className="text-xs text-slate-400">—</span>}
-                      </td>
-                      <td>
-                        <div className="flex items-center gap-1.5">
-                          <Link href={`/registrar/editar/${r.id}`} className="btn-edit no-underline">
-                            <Pencil size={11} />
-                            Editar
-                          </Link>
-                          {deleteConfirm === r.id ? (
-                            <div className="flex items-center gap-1">
-                              <button className="btn-danger text-[10px] px-2 py-1" onClick={() => handleDelete(r.id)}>
-                                Confirmar
-                              </button>
-                              <button className="btn-secondary text-[10px] px-2 py-1" onClick={() => setDeleteConfirm(null)}>
-                                Cancelar
-                              </button>
-                            </div>
-                          ) : (
-                            <button className="btn-danger" onClick={() => setDeleteConfirm(r.id)}>
-                              <Trash2 size={11} />
-                              Borrar
-                            </button>
-                          )}
-                        </div>
-                      </td>
+          {loading ? (
+            <div className="py-10 text-center text-slate-400">Cargando registros...</div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>
+                        <button
+                          onClick={() => toggleSort('arc_codi')}
+                          className="flex items-center gap-1 bg-transparent border-none text-[10px] font-bold uppercase tracking-[0.1em] text-white cursor-pointer"
+                        >
+                          Código <SortIcon col="arc_codi" />
+                        </button>
+                      </th>
+                      <th>
+                        <button
+                          onClick={() => toggleSort('arc_fech')}
+                          className="flex items-center gap-1 bg-transparent border-none text-[10px] font-bold uppercase tracking-[0.1em] text-white cursor-pointer"
+                        >
+                          Fecha <SortIcon col="arc_fech" />
+                        </button>
+                      </th>
+                      <th>Título</th>
+                      <th>
+                        <button
+                          onClick={() => toggleSort('arc_año')}
+                          className="flex items-center gap-1 bg-transparent border-none text-[10px] font-bold uppercase tracking-[0.1em] text-white cursor-pointer"
+                        >
+                          Año <SortIcon col="arc_año" />
+                        </button>
+                      </th>
+                      <th>Visibilidad</th>
+                      <th>Archivos</th>
+                      <th>Acciones</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {filtered.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-10 text-center text-sm text-slate-400">
+                          No se encontraron registros.
+                        </td>
+                      </tr>
+                    ) : (
+                      filtered.map((r) => (
+                        <tr key={r.arc_codi}>
+                          <td>
+                            <span className="text-[13px] font-bold text-sky-700">{r.arc_codi}</span>
+                          </td>
+                          <td className="whitespace-nowrap text-xs text-slate-500">
+                            {r.arc_fech}
+                          </td>
+                          <td className="max-w-[380px]">
+                            <span className="block overflow-hidden text-ellipsis whitespace-nowrap text-[13px] text-slate-800">
+                              {r.arc_titu}
+                            </span>
+                          </td>
+                          <td className="font-semibold text-slate-800">{r.arc_año || '—'}</td>
+                          <td>
+                            <span className={r.arc_visw ? 'badge-public' : 'badge-private'}>
+                              {r.arc_visw ? 'Público' : 'Privado'}
+                            </span>
+                          </td>
 
-          {filtered.length > 0 && (
-            <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
-              <span className="text-[11px] text-slate-400">
-                {filtered.length} registro{filtered.length !== 1 ? 's' : ''} encontrado{filtered.length !== 1 ? 's' : ''}
-              </span>
-              <span className="text-[11px] text-slate-400">
-                {filtered.filter(r => r.visibilidad === 'publico').length} públicos · {filtered.filter(r => r.visibilidad === 'privado').length} privados
-              </span>
-            </div>
+                          <td>
+                            {r.archivos && r.archivos.length > 0 ? (
+                              r.archivos.map((a) => (
+                                <a
+                                  key={a.id}
+                                  href={a.archivo}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  title={a.nombre}
+                                  className="badge-file no-underline cursor-pointer transition-opacity hover:opacity-80"
+                                >
+                                  {a.tipo}
+                                </a>
+                              ))
+                            ) : (
+                              <span className="text-xs text-slate-400">—</span>
+                            )}
+                          </td>
+
+                          <td>
+                            <div className="flex items-center gap-1.5">
+                              <Link href={`/registrar/editar/${r.arc_codi}`} className="btn-edit no-underline">
+                                <Pencil size={11} />
+                                Editar
+                              </Link>
+
+                              {deleteConfirm === r.arc_codi ? (
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    className="btn-danger text-[10px] px-2 py-1"
+                                    onClick={() => handleDelete(r.arc_codi)}
+                                  >
+                                    Confirmar
+                                  </button>
+                                  <button
+                                    className="btn-secondary text-[10px] px-2 py-1"
+                                    onClick={() => setDeleteConfirm(null)}
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  className="btn-danger"
+                                  onClick={() => setDeleteConfirm(r.arc_codi)}
+                                >
+                                  <Trash2 size={11} />
+                                  Borrar
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {filtered.length > 0 && (
+                <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
+                  <span className="text-[11px] text-slate-400">
+                    {filtered.length} registro{filtered.length !== 1 ? 's' : ''} encontrado{filtered.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

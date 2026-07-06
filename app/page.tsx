@@ -49,7 +49,7 @@ export default function HomePage() {
         </h1>
 
         <p className="mb-10 max-w-md text-base font-light leading-relaxed text-slate-500">
-          Obispado Villa de la Concepción del Río Cuarto. Argentina
+          Obispado Villa de la Concepción del Río Cuarto, Argentina
         </p>
 
         {/* CTAs */}

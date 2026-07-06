@@ -1,15 +1,38 @@
 'use client';
 
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { PlusCircle, List, BookOpen, Archive, FileText } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
-import { getAllRegistros } from '@/lib/mock-data';
+import { getRegistros } from '@/lib/api';
 
-const registros = getAllRegistros();
-const publicCount = registros.filter((r) => r.visibilidad === 'publico').length;
-const privateCount = registros.filter((r) => r.visibilidad === 'privado').length;
+interface Registro {
+  arc_codi: number;
+  arc_fech: string;
+  arc_titu: string;
+  arc_año: number;
+  arc_visw: boolean;
+  archivos: Array<{ id: number; nombre: string; tipo: string; archivo: string }>;
+}
 
 export default function RegistrarPage() {
+  const [registros, setRegistros] = useState<Registro[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadRegistros = async () => {
+      const { data, error } = await getRegistros();
+      if (data) {
+        const registrosArray = Array.isArray(data) ? data : (data.results || []);
+        setRegistros(registrosArray);
+      }
+      setLoading(false);
+    };
+    loadRegistros();
+  }, []);
+
+  const publicCount = registros.filter((r) => r.arc_visw === true).length;
+  const privateCount = registros.filter((r) => r.arc_visw === false).length;
   const recent = registros.slice(0, 5);
 
   return (
@@ -87,32 +110,57 @@ export default function RegistrarPage() {
                 </tr>
               </thead>
               <tbody>
-                {recent.map((r) => (
-                  <tr key={r.id}>
-                    <td>
-                      <Link href={`/registrar/editar/${r.id}`} className="font-semibold text-sky-700 no-underline hover:text-sky-800">
-                        {r.codigo}
-                      </Link>
-                    </td>
-                    <td className="whitespace-nowrap text-xs text-slate-500">{r.fecha_recepcion}</td>
-                    <td className="max-w-xs">
-                      <span className="block overflow-hidden text-ellipsis whitespace-nowrap text-sm">
-                        {r.titulo_referencia}
-                      </span>
-                    </td>
-                    <td className="font-medium">{r.anio}</td>
-                    <td>
-                      <span className={r.visibilidad === 'publico' ? 'badge-public' : 'badge-private'}>
-                        {r.visibilidad === 'publico' ? 'Público' : 'Privado'}
-                      </span>
-                    </td>
-                    <td>
-                      {r.archivos.length > 0
-                        ? r.archivos.map((a) => <span key={a.id} className="badge-file">{a.tipo}</span>)
-                        : <span className="text-xs text-slate-400">—</span>}
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-4 text-slate-500">
+                      Cargando registros...
                     </td>
                   </tr>
-                ))}
+                ) : recent.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-4 text-slate-500">
+                      No hay registros aún
+                    </td>
+                  </tr>
+                ) : (
+                  recent.map((r) => (
+                    <tr key={r.arc_codi}>
+                      <td>
+                        <Link href={`/registrar/editar/${r.arc_codi}`} className="font-semibold text-sky-700 no-underline hover:text-sky-800">
+                          {r.arc_codi}
+                        </Link>
+                      </td>
+                      <td className="whitespace-nowrap text-xs text-slate-500">{r.arc_fech}</td>
+                      <td className="max-w-xs">
+                        <span className="block overflow-hidden text-ellipsis whitespace-nowrap text-sm">
+                          {r.arc_titu}
+                        </span>
+                      </td>
+                      <td className="font-medium">{r.arc_año}</td>
+                      <td>
+                        <span className={r.arc_visw ? 'badge-public' : 'badge-private'}>
+                          {r.arc_visw ? 'Público' : 'Privado'}
+                        </span>
+                      </td>
+                      <td>
+                        {r.archivos && r.archivos.length > 0
+                          ? r.archivos.map((a) => (
+                              <a
+                                key={a.id}
+                                href={a.archivo}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title={a.nombre}
+                                className="badge-file no-underline cursor-pointer transition-opacity hover:opacity-80"
+                              >
+                                {a.tipo}
+                              </a>
+                            ))
+                          : <span className="text-xs text-slate-400">—</span>}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

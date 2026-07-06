@@ -1,27 +1,117 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { BookOpen, MapPin, FileText, Archive, Download, AlertCircle } from 'lucide-react';
+import { BookOpen, MapPin, FileText, Archive, Download, Eye, AlertCircle, Loader } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
-import { getRegistroById } from '@/lib/mock-data';
+import { getRegistroPublico } from '@/lib/api';
 
-function Field({ label, value }: { label: string; value?: string | number }) {
+interface Registro {
+  arc_codi: number;
+  arc_titu: string;
+  arc_desc?: string;
+  arc_cate?: string;
+  arc_año?: number;
+  arc_fech?: string;
+  arc_orig?: string;
+  arc_npro?: string;
+  arc_seg?: string;
+  arc_tema?: string;
+  arc_area?: string;
+  arc_asun?: string;
+  arc_inic?: string;
+  arc_dest?: string;
+  arc_sopo?: string;
+  arc_esta?: string;
+  arc_leng?: string;
+  arc_orco?: boolean;
+  arc_conA?: string;
+  arc_conR?: string;
+  arc_foli?: string;
+  arc_hoja?: string;
+  arc_medi?: string;
+  arc_ubsa?: string;
+  arc_grup?: string;
+  arc_seri?: string;
+  arc_sser?: string;
+  arc_pasi?: string;
+  arc_estan?: string;
+  arc_casi?: string;
+  arc_caja?: string;
+  arc_lega?: string;
+  arc_nume?: string;
+  arc_obse?: string;
+  arc_visw: boolean;
+  archivos: any[];
+}
+
+function Field({ label, value }: { label: string; value?: string | number | boolean }) {
   if (!value) return null;
+  const displayValue = typeof value === 'boolean' ? (value ? 'Sí' : 'No') : value;
   return (
     <div className="flex flex-col gap-1">
       <span className="text-[9px] font-bold uppercase tracking-[0.1em] text-slate-400">{label}</span>
-      <span className="text-sm text-slate-800">{value}</span>
+      <span className="text-sm text-slate-800">{displayValue}</span>
     </div>
   );
+}
+
+async function handleDownload(url: string, filename: string) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('No se pudo descargar el archivo');
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(blobUrl);
+  } catch {
+    // Si falla (ej. CORS), como último recurso abrimos el archivo en una pestaña nueva
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
 }
 
 export default function RegistroDetailPage() {
   const params = useParams();
   const id = Number(params.id);
-  const r = getRegistroById(id);
+  const [registro, setRegistro] = useState<Registro | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!r || r.visibilidad === 'privado') {
+  useEffect(() => {
+    const loadRegistro = async () => {
+      try {
+        const { data, error } = await getRegistroPublico(id);
+        if (error) {
+          setError(error);
+        } else {
+          setRegistro((data as Registro) ?? null);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadRegistro();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="page-container">
+        <AppHeader />
+        <div className="mx-auto max-w-md py-24 text-center">
+          <Loader size={36} className="mx-auto mb-4 animate-spin text-slate-300" />
+          <h2 className="mb-2 text-xl font-semibold text-slate-700">Cargando registro...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (!registro || !registro.arc_visw) {
     return (
       <div className="page-container">
         <AppHeader />
@@ -39,22 +129,24 @@ export default function RegistroDetailPage() {
 
   return (
     <div className="page-container">
-      <AppHeader breadcrumb={[{ label: 'Registros', href: '/registros' }, { label: `N° ${r.codigo}` }]} />
+      <AppHeader breadcrumb={[{ label: 'Registros', href: '/registros' }, { label: `N° ${registro.arc_codi}` }]} />
       <div className="content-wrapper pb-16 pt-10">
         {/* Page header */}
         <div className="page-header">
           <div className="mb-3 flex flex-wrap items-center gap-2">
-            <span className="rounded border border-sky-100 bg-sky-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-sky-700">
-              {r.categoria}
-            </span>
-            <span className="text-xs text-slate-400">Registro N° {r.codigo}</span>
+            {registro.arc_cate && (
+              <span className="rounded border border-sky-100 bg-sky-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-sky-700">
+                {registro.arc_cate}
+              </span>
+            )}
+            <span className="text-xs text-slate-400">Registro N° {registro.arc_codi}</span>
           </div>
           <h1 className="max-w-10xl text-2xl font-semibold leading-snug text-slate-900">
-            {r.titulo_referencia}
+            {registro.arc_titu}
           </h1>
-          {r.descripcion_breve && (
+          {registro.arc_desc && (
             <p className="mt-3 max-w-10xl text-sm leading-relaxed text-slate-500">
-              {r.descripcion_breve}
+              {registro.arc_desc}
             </p>
           )}
         </div>
@@ -70,17 +162,17 @@ export default function RegistroDetailPage() {
               </div>
               <div className="card-body">
                 <div className="grid grid-cols-2 gap-5">
-                  <Field label="Año del documento" value={r.anio} />
-                  <Field label="Fecha de recepción" value={r.fecha_recepcion} />
-                  <Field label="Origen" value={r.origen} />
-                  <Field label="Categoría" value={r.categoria} />
-                  <Field label="N° Protocolar" value={r.numero_protocolar} />
-                  <Field label="Segmento" value={r.segmento} />
-                  {r.tema && <Field label="Tema" value={r.tema} />}
-                  {r.area && <Field label="Área" value={r.area} />}
-                  {r.asunto && <div className="col-span-2"><Field label="Asunto" value={r.asunto} /></div>}
-                  {r.iniciador && <Field label="Iniciador" value={r.iniciador} />}
-                  {r.destinatarios && <Field label="Destinatarios" value={r.destinatarios} />}
+                  <Field label="Año del documento" value={registro.arc_año} />
+                  <Field label="Fecha de recepción" value={registro.arc_fech} />
+                  <Field label="Origen" value={registro.arc_orig} />
+                  <Field label="Categoría" value={registro.arc_cate} />
+                  <Field label="N° Protocolar" value={registro.arc_npro} />
+                  <Field label="Segmento" value={registro.arc_seg} />
+                  {registro.arc_tema && <Field label="Tema" value={registro.arc_tema} />}
+                  {registro.arc_area && <Field label="Área" value={registro.arc_area} />}
+                  {registro.arc_asun && <div className="col-span-2"><Field label="Asunto" value={registro.arc_asun} /></div>}
+                  {registro.arc_inic && <Field label="Iniciador" value={registro.arc_inic} />}
+                  {registro.arc_dest && <Field label="Destinatarios" value={registro.arc_dest} />}
                 </div>
               </div>
             </div>
@@ -93,28 +185,28 @@ export default function RegistroDetailPage() {
               </div>
               <div className="card-body">
                 <div className="grid grid-cols-3 gap-5">
-                  <Field label="Soporte" value={r.soporte} />
-                  <Field label="Estado de conservación" value={r.estado_conservacion} />
-                  <Field label="Lengua / Escritura" value={r.lengua_escritura} />
-                  <Field label="Original / Copia" value={r.original_copia} />
-                  <Field label="Condición de acceso" value={r.cond_acceso} />
-                  <Field label="Cond. reproducción" value={r.cond_reproduccion} />
-                  {r.folios && <Field label="Folios" value={r.folios} />}
-                  {r.hojas && <Field label="Hojas" value={r.hojas} />}
-                  {r.medidas && <Field label="Carillas" value={r.medidas} />}
+                  <Field label="Soporte" value={registro.arc_sopo} />
+                  <Field label="Estado de conservación" value={registro.arc_esta} />
+                  <Field label="Lengua / Escritura" value={registro.arc_leng} />
+                  <Field label="Original / Copia" value={registro.arc_orco} />
+                  <Field label="Condición de acceso" value={registro.arc_conA} />
+                  <Field label="Cond. reproducción" value={registro.arc_conR} />
+                  {registro.arc_foli && <Field label="Folios" value={registro.arc_foli} />}
+                  {registro.arc_hoja && <Field label="Hojas" value={registro.arc_hoja} />}
+                  {registro.arc_medi && <Field label="Medidas" value={registro.arc_medi} />}
                 </div>
               </div>
             </div>
 
             {/* Archivos */}
-            {r.archivos.length > 0 && (
+            {registro.archivos && registro.archivos.length > 0 && (
               <div className="card-section">
                 <div className="section-header flex items-center gap-2">
                   <FileText size={11} />
-                  Archivos adjuntos ({r.archivos.length})
+                  Archivos adjuntos ({registro.archivos.length})
                 </div>
                 <div className="card-body flex flex-col gap-2">
-                  {r.archivos.map((a) => (
+                  {registro.archivos.map((a) => (
                     <div
                       key={a.id}
                       className="flex items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3"
@@ -126,7 +218,20 @@ export default function RegistroDetailPage() {
                         <p className="text-sm font-medium text-slate-800">{a.nombre}</p>
                         <p className="text-xs text-slate-400">{a.tipo}</p>
                       </div>
-                      <button className="flex items-center gap-1 text-[11px] font-semibold text-sky-700 hover:text-sky-800 transition-colors">
+                      <a
+                        href={a.archivo}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-[11px] font-semibold text-sky-700 hover:text-sky-800 transition-colors"
+                      >
+                        <Eye size={12} />
+                        VER
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => handleDownload(a.archivo, a.nombre)}
+                        className="flex items-center gap-1 text-[11px] font-semibold text-sky-700 hover:text-sky-800 transition-colors"
+                      >
                         <Download size={12} />
                         Descargar
                       </button>
@@ -145,27 +250,27 @@ export default function RegistroDetailPage() {
                 Ubicación física
               </div>
               <div className="card-body flex flex-col gap-4">
-                <Field label="Sala" value={r.ubicacion_sala} />
-                <Field label="Grupo" value={r.grupo} />
-                <Field label="Serie" value={r.serie} />
-                {r.sub_serie && <Field label="Sub serie" value={r.sub_serie} />}
+                <Field label="Sala" value={registro.arc_ubsa} />
+                <Field label="Grupo" value={registro.arc_grup} />
+                <Field label="Serie" value={registro.arc_seri} />
+                {registro.arc_sser && <Field label="Sub serie" value={registro.arc_sser} />}
                 <div className="grid grid-cols-2 gap-3 border-t border-slate-100 pt-3">
-                  {r.pasillo && <Field label="Pasillo" value={r.pasillo} />}
-                  {r.estanteria && <Field label="Estantería" value={r.estanteria} />}
-                  {r.casillero && <Field label="Casillero" value={r.casillero} />}
-                  {r.caja_nro && <Field label="Caja N°" value={r.caja_nro} />}
-                  {r.legajo && <Field label="Legajo" value={r.legajo} />}
-                  {r.numero && <Field label="N° Registro" value={r.numero} />}
+                  {registro.arc_pasi && <Field label="Pasillo" value={registro.arc_pasi} />}
+                  {registro.arc_estan && <Field label="Estantería" value={registro.arc_estan} />}
+                  {registro.arc_casi && <Field label="Casillero" value={registro.arc_casi} />}
+                  {registro.arc_caja && <Field label="Caja N°" value={registro.arc_caja} />}
+                  {registro.arc_lega && <Field label="Legajo" value={registro.arc_lega} />}
+                  {registro.arc_nume && <Field label="N° Registro" value={registro.arc_nume} />}
                 </div>
               </div>
             </div>
 
-            {r.nota_archivero && (
+            {registro.arc_obse && (
               <div className="card-section">
                 <div className="section-header">Nota del archivero</div>
                 <div className="card-body">
                   <p className="text-xs italic leading-relaxed text-slate-500">
-                    &ldquo;{r.nota_archivero}&rdquo;
+                    &ldquo;{registro.arc_obse}&rdquo;
                   </p>
                 </div>
               </div>
